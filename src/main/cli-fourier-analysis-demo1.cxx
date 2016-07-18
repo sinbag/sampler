@@ -19,9 +19,9 @@ int main(int argc, char** argv)
     std::string fn_rules;
     std::string fn_bary;
     std::string fn_dev;
-//    std::string fn_out;
+    std::string fn_out="test.txt";
     unsigned int nbSample, numPatches, trialStep;
-    double frequencyStep;
+    float frequencyStep;
     std::string mode;
     std::string wrapper;
     std::string samplingpattern = "bnot";
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
              boostPO::value<unsigned int>(&trialStep)->default_value(1),
              "Output average after trialStep patches")
             ("freq,f",
-             boostPO::value<double>(&frequencyStep)->default_value(1.0),
+             boostPO::value<float>(&frequencyStep)->default_value(1.0),
              "Frequency Step")
             ("translate,t",
              boostPO::value<std::string>(&mode)->default_value("nohomogenize"),
@@ -106,10 +106,11 @@ int main(int argc, char** argv)
     //============================================================
 
     int width = 512, height = 512;
-    double* power = new double[width*height]();
-    double* powerAccum = new double[width*height]();
-    std::complex<double>* complexSpectrum = new std::complex<double>[width*height]();
+    float* power = new float[width*height]();
+    float* powerAccum = new float[width*height]();
+    std::complex<float>* complexSpectrum = new std::complex<float>[width*height]();
     int N = nbSample;
+    float spaceSize = 0.21;
     //============================================================
 
     if( seed == 0 )
@@ -122,7 +123,7 @@ int main(int argc, char** argv)
     for(int patch = 1; patch <= numPatches; patch++){
 
         seed = std::ceil(drand48()*408);
-        WriterVector write;
+        WriterFileRaw write(fn_out);
         sampler.generateUniform(N, -1, write, seed);
 
         //##########################################################
@@ -131,12 +132,16 @@ int main(int argc, char** argv)
 
         //##########################################################
 
-        std::vector<double> finalsamples;
+        std::vector<float> finalsamples;
 
-        for(int i =0; i < write.pts().size();i++){
-            finalsamples.push_back(write.pts().at(i).x());
-            finalsamples.push_back(write.pts().at(i).y());
-            std::cout << write.pts().at(i).x() <<" " << write.pts().at(i).y() << std::endl;
+        for(int i =0; i < write.pts().size();i+=2){
+
+            float x = write.pts().at(i);
+            float y = write.pts().at(i+1);
+
+            finalsamples.push_back(x);
+            finalsamples.push_back(y);
+            //std::cout << x << " "<< y << std::endl;
         }
 
         //##########################################################
@@ -146,8 +151,8 @@ int main(int argc, char** argv)
         }
         //##########################################################
 
-        FT<double>::continuous_fourier_spectrum_parallel(complexSpectrum, finalsamples, width, height, frequencyStep);
-        FT<double>::power_fourier_spectrum(power, complexSpectrum, nbSample, width, height);
+        FT<float>::continuous_fourier_spectrum_parallel(complexSpectrum, finalsamples, width, height, frequencyStep);
+        FT<float>::power_fourier_spectrum(power, complexSpectrum, nbSample, width, height);
         //perform_cft_parallel(power, finalsamples, N, width, height,frequencyStep);
 
         //##########################################################
@@ -179,7 +184,7 @@ int main(int argc, char** argv)
 
             ss.str(std::string());
             ss << datafiles << "radial-mean-cft-fstep" << frequencyStep << "-"  << mode << "-" << samplingpattern << "-" << wrapper << "-n" << N << "-" << s1 << ".txt";
-            FT<double>::compute_radial_mean_powerspectrum(ss.str(), power, width, height);
+            FT<float>::compute_radial_mean_powerspectrum(ss.str(), power, width, height);
         }
     }
     std::cerr << std::endl;

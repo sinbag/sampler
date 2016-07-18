@@ -42,6 +42,10 @@ template void FT<double>::continuous_fourier_spectrum_parallel(std::complex<doub
                                                           std::vector<double> &points, int width,
                                                           int height, double dstep);
 
+template void FT<float>::continuous_fourier_spectrum_parallel(std::complex<float> *complexSpectrum,
+                                                          std::vector<float> &points, int width,
+                                                          int height, float dstep);
+
 /*
 template <typename T>
 T* inverse_fourier_spectrum_parallel(T* result, T* complexSpectrum, int total_samples, int width,

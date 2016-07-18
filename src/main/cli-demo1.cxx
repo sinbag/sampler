@@ -1,5 +1,6 @@
 #include <boost/program_options.hpp>
 #include <iostream>
+#include "./io/write-eps.h"
 
 #include "sampler.hpp"
 #include "tiling.hpp"
@@ -67,24 +68,19 @@ int main(int argc, char** argv)
     if( seed == 0 )
     {
         srand48(time(NULL));
+        seed = std::ceil(drand48()*408);
     }
     if( vm.count("seed") ) seed = (seed-1)%408;
 
     if( vm.count("out") )
     {
-        //WriterFileRaw write(fn_out);
-        for(int p = 0; p < 2; p++){
-            seed = std::ceil(drand48()*408);
-            WriterVector write;
-            sampler.generateUniform(nbSample, -1, write, seed);
+        WriterFileRaw write(fn_out);
+        sampler.generateUniform(nbSample, -1, write, seed);
+        std::cerr << write.pts().size() << std::endl;
+        write_eps("test.eps", write.pts());
 
-            for(int i =0; i < write.pts().size();i++){
-                std::cout << write.pts().at(i).x() <<" " << write.pts().at(i).y() << std::endl;
-            }
-            std::cout << std::endl;
-            std::cout << "New Patch " << std::endl;
-            std::cout << std::endl;
-        }
+        //for(int i=0; i < write.pts().size(); i+=2)
+        //    std::cout << write.pts().at(i) << " "<< write.pts().at(i+1) << std::endl;
     }
     else
     {

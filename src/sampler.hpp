@@ -42,6 +42,7 @@ template <class WRITER>
 unsigned int Sampler::generateUniform(const float& density, const short int& ilut, WRITER& write, const unsigned short int& seed, const float& spaceSize, const bool& crop)
 {
     UniformSampling<WRITER> algorithm(&m_tiling, &m_data, ilut, write);
+    std::cerr << "here 1 " <<  std::endl;
     unsigned int nbSample;
     std::clock_t t = std::clock();
     if(crop)

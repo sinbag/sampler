@@ -3,7 +3,8 @@
 #include <fstream>
 
 // export sites to an EPS image
-void write_eps(std::string filename, const std::vector<double> &points, int nDims, double radius, double scale) {
+template <typename T>
+void write_eps(std::string filename, const std::vector<T> &points, int nDims, double radius, double scale) {
 
     if(filename.compare(filename.size()-4, 4,".eps") != 0){
         filename.erase(filename.end()-4, filename.end());
@@ -43,6 +44,9 @@ void write_eps(std::string filename, const std::vector<double> &points, int nDim
 
     //  return true;
 }
+
+template void write_eps(std::string filename, const std::vector<double> &points, int nDims, double radius, double scale);
+template void write_eps(std::string filename, const std::vector<float> &points, int nDims, double radius, double scale);
 
 // export sites to an EPS image
 void write_eps_colored(std::string filename, const std::vector<double> &points, int nDims, double radius, double scale) {

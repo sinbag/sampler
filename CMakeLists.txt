@@ -90,7 +90,7 @@ ${PROJECT_SOURCE_DIR}/src/gui/*.hpp
 #  ${PROJECT_SOURCE_DIR}/src/core/*.cpp
 )
 
-add_executable(sampler-cli ${PROJECT_SOURCE_DIR}/src/main/cli-fourier-analysis-demo1.cxx ${sampler-core-src})
+add_executable(sampler-cli ${PROJECT_SOURCE_DIR}/src/main/cli.cpp ${sampler-core-src})
 target_link_libraries(
         sampler-cli
         ${Boost_LIBRARIES}
