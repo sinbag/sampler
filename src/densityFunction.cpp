@@ -1,8 +1,9 @@
 #include "densityFunction.hpp"
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+//#include "SDL.h"
+//#include "SDL_image.h"
 
 float dFunc_constant(const Point& pt)
 { return 1.0; }
