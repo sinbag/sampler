@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     if( vm.count("out") )
     {
         WriterFileRaw write(fn_out);
-        sampler.generateUniform(nbSample, -1, write, seed);
+        sampler.generateUniform(nbSample, 0, write, seed);
         std::cerr << write.pts().size() << std::endl;
         write_eps("test.eps", write.pts());
 

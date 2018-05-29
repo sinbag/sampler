@@ -7,7 +7,7 @@
 template <typename T>
 void FT<T>::continuous_fourier_spectrum_parallel(std::complex<T> *complexSpectrum,
                                                  std::vector<T> &points, int width,
-                                                 int height, T dstep){
+                                                 int height, T dstep, int ndims, int projection){
 
     int halfwidth = width * 0.5;
     int halfheight = height * 0.5;
@@ -15,6 +15,7 @@ void FT<T>::continuous_fourier_spectrum_parallel(std::complex<T> *complexSpectru
 
     //tbb::tick_count t0 = tbb::tick_count::now();
     tbb::task_scheduler_init init(8);
+    if(ndims == 2){
     tbb::parallel_for(
         tbb::blocked_range2d<int>(0,width, 16, 0, height, 16),
         [=](const tbb::blocked_range2d<int>& imgblock ) {
@@ -34,17 +35,38 @@ void FT<T>::continuous_fourier_spectrum_parallel(std::complex<T> *complexSpectru
                     complexSpectrum[row*width+col].imag(fy);  ///imaginary part
                 }
             }
+    });
     }
-    );
+    else if(ndims == 1){
+        
+        //tbb::tick_count t0 = tbb::tick_count::now();
+        //tbb::task_scheduler_init init(1);
+        
+        tbb::parallel_for(0, width, [&](int col) {
+            double freal = 0.f, fimag = 0.f;
+            double wx = (col-halfwidth);
+            
+            //            std::cerr << half_xRes <<" " << npoints << " " << wx << std::endl;
+            
+            for (int i = 0; i < npoints; ++i) {
+                double exp = -twopi * (wx * points[2*i+projection]);
+                freal += cos(exp);
+                fimag += sin(exp);
+            }
+            ///Real and Imag coeffs are not divided by 1/N for better visualization
+            complexSpectrum[col].real(freal); ///real part
+            complexSpectrum[col].imag(fimag);  ///imaginary part
+        });
+    }
 }
 
 template void FT<double>::continuous_fourier_spectrum_parallel(std::complex<double> *complexSpectrum,
                                                           std::vector<double> &points, int width,
-                                                          int height, double dstep);
+                                                          int height, double dstep, int ndims, int projection);
 
 template void FT<float>::continuous_fourier_spectrum_parallel(std::complex<float> *complexSpectrum,
                                                           std::vector<float> &points, int width,
-                                                          int height, float dstep);
+                                                          int height, float dstep, int ndims, int projection);
 
 /*
 template <typename T>

@@ -28,7 +28,7 @@ class WriterFileRaw
     public:
         inline void sample(const Point& sample, const TileState& tilestate)
         {
-            m_file << sample.x()/m_spaceSize+0.5 << "\t" << sample.y()/m_spaceSize+0.5 << std::endl;
+            //m_file << sample.x()/m_spaceSize+0.5 << "\t" << sample.y()/m_spaceSize+0.5 << std::endl;
             m_pointset.push_back(sample.x()/m_spaceSize+0.5);
             m_pointset.push_back(sample.y()/m_spaceSize+0.5);
         }

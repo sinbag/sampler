@@ -20,14 +20,15 @@ int main(int argc, char** argv)
     std::string fn_bary;
     std::string fn_dev;
     std::string fn_out="test.txt";
-    unsigned int nbSample, numPatches, trialStep;
+    unsigned int nbSample, numPatches, trialStep,resolution, ndims, projection;
     float frequencyStep;
     std::string mode;
     std::string wrapper;
     std::string samplingpattern = "bnot";
 
     unsigned short int seed;
-
+    std::cerr <<
+    "usage: ./fourier-analysis -r ./../data/lut/production_rules.dat -b ./../data/lut/barycenters.dat -d ./../data/lut/offsets_bnot.dat -n 1024 -o sampling.txt" << std::endl;
     boostPO::variables_map vm;
     boostPO::options_description desc("Allowed options");
     desc.add_options()
@@ -51,9 +52,18 @@ int main(int argc, char** argv)
             ("avg,a",
              boostPO::value<unsigned int>(&trialStep)->default_value(1),
              "Output average after trialStep patches")
+            ("resolution,u",
+             boostPO::value<unsigned int>(&resolution)->default_value(512),
+             "resolution")
             ("freq,f",
              boostPO::value<float>(&frequencyStep)->default_value(1.0),
              "Frequency Step")
+    ("dims,e",
+     boostPO::value<unsigned int>(&ndims)->default_value(2),
+     "Number of dimensions")
+    ("projection,c",
+     boostPO::value<unsigned int>(&projection)->default_value(0),
+     "projection")
             ("translate,t",
              boostPO::value<std::string>(&mode)->default_value("nohomogenize"),
              "Homogenization mode")
@@ -105,7 +115,9 @@ int main(int argc, char** argv)
     create_folders(ss.str(), datafiles, images, graphs);
     //============================================================
 
-    int width = 512, height = 512;
+    int width = resolution, height = resolution;
+    if(ndims == 1)
+        height = 1;
     float* power = new float[width*height]();
     float* powerAccum = new float[width*height]();
     std::complex<float>* complexSpectrum = new std::complex<float>[width*height]();
@@ -124,10 +136,12 @@ int main(int argc, char** argv)
 
         seed = std::ceil(drand48()*408);
         WriterFileRaw write(fn_out);
-        sampler.generateUniform(N, -1, write, seed);
+//        WriterVector write;
+        sampler.generateUniform(N, 0, write, seed);
 
         //##########################################################
 
+        nbSample = write.pts().size() * 0.5;
         fprintf(stderr,"\r N trial (%d %d)", nbSample, patch);
 
         //##########################################################
@@ -136,14 +150,14 @@ int main(int argc, char** argv)
 
         for(int i =0; i < write.pts().size();i+=2){
 
-            float x = write.pts().at(i);
-            float y = write.pts().at(i+1);
+            float x = write.pts().at(i);//.x();
+            float y = write.pts().at(i+1);//.y();
 
             finalsamples.push_back(x);
             finalsamples.push_back(y);
-            //std::cout << x << " "<< y << std::endl;
+//            std::cout << x << " "<< y << std::endl;
         }
-
+//        std::cerr << "# of samples: " << write.pts().size() << " "<< nbSample << std::endl;
         //##########################################################
 
         for(int k = 0; k < width*height; k++){
@@ -151,8 +165,8 @@ int main(int argc, char** argv)
         }
         //##########################################################
 
-        FT<float>::continuous_fourier_spectrum_parallel(complexSpectrum, finalsamples, width, height, frequencyStep);
-        FT<float>::power_fourier_spectrum(power, complexSpectrum, nbSample, width, height);
+        FT<float>::continuous_fourier_spectrum_parallel(complexSpectrum, finalsamples, width, height, frequencyStep, ndims, projection);
+        FT<float>::power_fourier_spectrum(power, complexSpectrum, nbSample, width, height, ndims);
         //perform_cft_parallel(power, finalsamples, N, width, height,frequencyStep);
 
         //##########################################################
@@ -174,17 +188,25 @@ int main(int argc, char** argv)
             //##########################################################
 
             ss.str(std::string());
-            ss << images << "power-cft-fstep" << frequencyStep << "-" << mode << "-" << samplingpattern << "-" << wrapper << "-n" << N << "-" << s1 << ".png";
+            ss << images << "power-cft-fstep" << frequencyStep << "-" << mode << "-" << samplingpattern << "-" << wrapper << "-n" << N << "-r" << resolution << "-" << s1 << ".png";
             write_exr_grey(ss.str(), power, width, height);
 
             ss.str(std::string());
-            ss << images << "pointset-" << mode << "-" << samplingpattern<< "-" << wrapper << "-n" << N << "-" << s1 << ".png";
+            ss << images << "pointset-" << mode << "-" << samplingpattern<< "-" << wrapper << "-n" << N << "-r" << resolution << "-" << s1 << ".png";
             write_eps(ss.str(), finalsamples);
+            write_txt(ss.str(), finalsamples);
             //##########################################################
-
+            
             ss.str(std::string());
-            ss << datafiles << "radial-mean-cft-fstep" << frequencyStep << "-"  << mode << "-" << samplingpattern << "-" << wrapper << "-n" << N << "-" << s1 << ".txt";
-            FT<float>::compute_radial_mean_powerspectrum(ss.str(), power, width, height);
+            ss << datafiles << "radial-mean-cft-fstep" << frequencyStep << "-"  << mode << "-" << samplingpattern << "-" << wrapper << "-n" << N << "-r" << resolution << "-proj" << projection << "-" << s1 << ".txt";
+            std::string meanfilename = ss.str();
+            
+            ss.str(std::string());
+            ss << datafiles << "radial-anisotropy-cft-fstep" << frequencyStep << "-"  << mode << "-" << samplingpattern << "-" << wrapper << "-n" << N << "-r" << resolution << "-proj" << projection << "-" << s1 << ".txt";
+            std::string anisotropyfilename = ss.str();
+            
+            FT<float>::radialStatistics(meanfilename, anisotropyfilename, power,
+                                        width, height, patch, ndims);
         }
     }
     std::cerr << std::endl;

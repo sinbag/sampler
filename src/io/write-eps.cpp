@@ -91,3 +91,26 @@ void write_eps_colored(std::string filename, const std::vector<double> &points, 
     //  return true;
 }
 
+// export sites to an TXT image
+template <typename T>
+void write_txt(std::string filename, const std::vector<T> &points, int nDims) {
+    
+    if(filename.compare(filename.size()-4, 4,".txt") != 0){
+        filename.erase(filename.end()-4, filename.end());
+        filename += ".txt";
+    }
+    
+    std::ofstream os;
+    os.open(filename.c_str());
+    
+    int npoints = points.size() * 0.5;
+    for (unsigned int i = 0; i < npoints; ++i) {
+        os << points[2*i] << " " << points[2*i+1] << " \n";
+    }
+    os.close();
+}
+
+template void write_txt(std::string filename, const std::vector<double> &points, int nDims);
+template void write_txt(std::string filename, const std::vector<float> &points, int nDims);
+
+
